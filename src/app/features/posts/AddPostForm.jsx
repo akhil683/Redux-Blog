@@ -1,34 +1,42 @@
 import React, { useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { nanoid } from '@reduxjs/toolkit'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { postAdded } from './postSlice'
+import { selectedAllUsers } from '../users/userSlice'
 
 const AddPostForm = () => {
-   const [ title, setTitle ] = useState('')
-   const [ content, setContent ] = useState('')
 
    const dispatch = useDispatch()
+   const [ title, setTitle ] = useState('')
+   const [ content, setContent ] = useState('')
+   const [ userId, setUserId ] = useState('')
+
+
+   const users = useSelector(selectedAllUsers);
 
    const onTitleChanged = e => setTitle(e.target.value)
    const onContentchanged = e => setContent(e.target.value)
-
+   const onAuthorchanged = e => setUserId(e.target.value)
 
    const onSavePostClicked = (e) => {
       e.preventDefault();
       if (title && content) {
          dispatch(
-            postAdded({
-               id: nanoid(),
-               title,
-               content
-            }))
+            postAdded(title, content, userId))
          setTitle("")
          setContent("")
    }
 }
 
-  return (
+const canSave = Boolean(title) && Boolean(content) && Boolean(userId)
+
+const usersOptions = users.map(user => (
+   <option key={user.id} value={user.id}>
+      {user.name}
+   </option>
+))
+
+return (
    <section className='flex flex-col gap-6 m-6'>
       <h2 className='text-xl text-red-400'>Add a New Post</h2>
          <form onSubmit={(e) => onSavePostClicked(e)}>
@@ -39,8 +47,13 @@ const AddPostForm = () => {
                name='postTitle'
                value={title}
                onChange={onTitleChanged}
-               className='w-full mb-4 text-black'
+               className='w-full mb-4 text-black rounded-md py-1 mt-2'
             />
+            <label htmlFor='postAuthor'>Author: </label>
+            <select id='postAuthor' value={userId} onChange={onAuthorchanged} className=' text-black' >
+               <option value=""></option>
+               {usersOptions}
+            </select>
             <label htmlFor='postContent'>Content: </label>
             <input 
                type="text"
@@ -48,9 +61,14 @@ const AddPostForm = () => {
                name='postContent'
                value={content}
                onChange={onContentchanged}
-               className='w-full mb-4 text-black'
+               className='w-full mb-4 text-black py-1 mt-2 rounded-md'
             />
-            <button className='px-4 py-2 rounded-xl bg-blue-500' type='submit'>Save Post</button>
+            <button 
+               className='px-4 py-2 rounded-xl bg-blue-500' 
+               type='submit' 
+               disabled={!canSave}>
+                  Save Post
+            </button>
          </form>
    </section> 
   )
